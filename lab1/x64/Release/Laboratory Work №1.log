@@ -1,0 +1,11 @@
+﻿  IsField.cpp
+  main.cpp
+  Set.cpp
+  Создание кода
+  Previous IPDB not found, fall back to full compilation.
+C:\Users\Алексей\source\repos\2-course\Laboratory Works\Laboratory Work №1\IsField.cpp(181): warning C4715: OppositeElementMult: значение возвращается не при всех путях выполнения
+C:\Users\Алексей\source\repos\2-course\Laboratory Works\Laboratory Work №1\IsField.cpp(122): warning C4715: NeutralElementMult: значение возвращается не при всех путях выполнения
+C:\Users\Алексей\source\repos\2-course\Laboratory Works\Laboratory Work №1\IsField.cpp(72): warning C4715: NeutralElementPlus: значение возвращается не при всех путях выполнения
+  All 571 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Создание кода завершено
+  Laboratory Work №1.vcxproj -> C:\Users\Алексей\source\repos\2-course\Laboratory Works\x64\Release\Laboratory Work №1.exe
