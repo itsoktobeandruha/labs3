@@ -1,43 +1,60 @@
-#include "MainWindow.h"
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
 {
-    ui.setupUi(this);
-    timer = new QTimer;
-    timer->setInterval(2000);
-    connect(timer, SIGNAL(timeout()), this, SLOT(UpdateProcesses()));
-    connect(ui.tableWidget, SIGNAL(itemDoubleClicked(QTableWidgetItem*)), this, SLOT(KillProcess(QTableWidgetItem*)));
-
-    UpdateProcesses();
-    timer->start();
+    ui->setupUi(this);
+    QTimer *timer = new QTimer();
+    connect(timer, &QTimer::timeout, this, &MainWindow::update_processes);
+    connect(this, &MainWindow::update,this,&MainWindow::show_processes);
+    connect(ui->killButton, &QPushButton::clicked, this, &MainWindow::kill_process);
+    timer->start(1000);
 }
 
-QList<std::tuple<QTableWidgetItem*, QTableWidgetItem*, QTableWidgetItem*, QTableWidgetItem*>> MainWindow::GetProcesses()
+MainWindow::~MainWindow()
 {
-    PROCESSENTRY32W pe32;
-    pe32.dwSize = sizeof(PROCESSENTRY32W);
+    delete ui;
+}
 
-    HANDLE ProcessesSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-
-    QList<std::tuple<QTableWidgetItem*, QTableWidgetItem*, QTableWidgetItem*, QTableWidgetItem*>> ProcessList;
-
-    if (ProcessesSnapshot == INVALID_HANDLE_VALUE)
-    {
-        return ProcessList;
-    }
-
-    Process32FirstW(ProcessesSnapshot, &pe32);
-
+void MainWindow::update_processes()
+{
+    QList<proc> proc_list;
+    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    PROCESSENTRY32 pr_struct;
+    pr_struct.dwSize = sizeof(PROCESSENTRY32);
+    Process32First(snapshot, &pr_struct);
     do
-    {
-        ProcessList.push_back(ParseProcess(pe32));
+    {    
+            proc process(pr_struct.th32ProcessID, pr_struct.szExeFile);
+            proc_list.push_back(process);
     }
-    while (Process32NextW(ProcessesSnapshot, &pe32));
+    while (Process32Next(snapshot, &pr_struct));
+    emit update(proc_list);
+}
 
-    CloseHandle(ProcessesSnapshot);
+void MainWindow::show_processes(QList<MainWindow::proc> proc_list)
+{
+    ui->processTable->setSortingEnabled(false);
+    ui->processTable->clearContents();
+    ui->processTable->setRowCount(proc_list.size());
+    int j=0;
+    for (auto& i : proc_list)
+    {
+        ui->processTable->setItem(j,0,new QTableWidgetItem(i.NAME));
+        ui->processTable->setItem(j,1, new QTableWidgetItem(QString::number(i.PID)));
+        ui->processTable->setItem(j,2,new QTableWidgetItem(QString::number(i.MEMORY)));
+        ui->processTable->setItem(j,3,new QTableWidgetItem(i.PRIORITY));
+        j++;
+    }
+    ui->processTable->setSortingEnabled(true);
+}
 
-    return ProcessList;
+void MainWindow::kill_process()
+{
+    system(("taskkill /F /PID " + ui->killString->text()).toStdString().c_str());
+    update_processes();
 }
 
 SIZE_T MainWindow::GetProcMemory(unsigned long PID)
@@ -46,61 +63,6 @@ SIZE_T MainWindow::GetProcMemory(unsigned long PID)
     PROCESS_MEMORY_COUNTERS pmc;
     GetProcessMemoryInfo(ProcHandle, &pmc, sizeof(pmc));
     return pmc.WorkingSetSize / 1024 / 1024;
-}
-
-void MainWindow::UpdateProcesses()
-{
-    auto ProcessList = GetProcesses();
-    ui.tableWidget->setSortingEnabled(false);
-    ui.tableWidget->clearContents();
-    ui.tableWidget->setRowCount(ProcessList.size());
-
-    int i = 0;
-    for (auto& process : ProcessList)
-    {
-        ui.tableWidget->setItem(i, 0, std::get<0>(process));
-        ui.tableWidget->setItem(i, 1, std::get<1>(process));
-        ui.tableWidget->setItem(i, 2, std::get<2>(process));
-        ui.tableWidget->setItem(i, 3, std::get<3>(process));
-        ++i;
-    }
-
-    ui.tableWidget->setSortingEnabled(true);
-}
-
-void MainWindow::KillProcess(QTableWidgetItem* item)
-{
-    bool ok;
-    item->text().toInt(&ok);
-    QProcess proc;
-
-    if (ok)
-    {
-        proc.start("taskkill /F /PID " + item->text());
-        proc.waitForFinished();
-    }
-    else
-    {
-        proc.start("taskkill /F /IM " + item->text());
-        proc.waitForFinished();
-    }
-
-    UpdateProcesses();
-}
-
-std::tuple<QTableWidgetItem*, QTableWidgetItem*, QTableWidgetItem*, QTableWidgetItem*> MainWindow::ParseProcess(PROCESSENTRY32W& Process)
-{
-    auto* Name = new QTableWidgetItem(QString::fromWCharArray(Process.szExeFile));
-    auto* PID = new QTableWidgetItem(QString::number(Process.th32ProcessID));
-
-    auto Memory = GetProcMemory(Process.th32ProcessID);
-    auto* RAM = new QTableWidgetItem(QString::number(Memory));
-
-    auto* Priority = new QTableWidgetItem(ParsePriority(Process.th32ProcessID));
-
-    std::tuple<QTableWidgetItem*, QTableWidgetItem*, QTableWidgetItem*, QTableWidgetItem*> parsed_process(Name, PID, RAM, Priority);
-
-    return parsed_process;
 }
 
 QString MainWindow::ParsePriority(DWORD PID)
@@ -112,34 +74,37 @@ QString MainWindow::ParsePriority(DWORD PID)
     switch (priority)
     {
         case ABOVE_NORMAL_PRIORITY_CLASS:
-        priority_string = QString::fromWCharArray(L"Above Average");
+        priority_string = QString::fromWCharArray(L"ABOVE NORMAL");
         break;
 
         case BELOW_NORMAL_PRIORITY_CLASS:
-            priority_string = QString::fromWCharArray(L"Below Average");
+            priority_string = QString::fromWCharArray(L"BELOW NORMAL");
             break;
 
         case NORMAL_PRIORITY_CLASS:
-            priority_string = QString::fromWCharArray(L"Average");
+            priority_string = QString::fromWCharArray(L"NORMAL");
             break;
 
         case HIGH_PRIORITY_CLASS:
-            priority_string = QString::fromWCharArray(L"High");
+            priority_string = QString::fromWCharArray(L"HIGH");
             break;
 
         case IDLE_PRIORITY_CLASS:
-            priority_string = QString::fromWCharArray(L"Low");
+            priority_string = QString::fromWCharArray(L"IDLE");
             break;
 
         case REALTIME_PRIORITY_CLASS:
-            priority_string = QString::fromWCharArray(L"Real Time");
+            priority_string = QString::fromWCharArray(L"REALTIME");
             break;
 
         default:
-            priority_string = QString::fromWCharArray(L"No Info");
+            priority_string = QString::fromWCharArray(L"UNKNOWN");
             break;
     }
 
     return priority_string;
 }
+
+
+
 

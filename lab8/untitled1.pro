@@ -9,17 +9,17 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    intQTableWidgetItem.cpp \
-    intqtablewidgetitem.cpp \
     main.cpp \
-    MainWindow.cpp
+    mainwindow.cpp
 
 HEADERS += \
-    MainWindow.h \
-    intqtablewidgetitem.h
+    mainwindow.h
 
 FORMS += \
-    MainWindow.ui
+    mainwindow.ui
+
+LIBS += \
+    -lpsapi
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

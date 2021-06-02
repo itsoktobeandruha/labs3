@@ -6,69 +6,83 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>751</width>
-    <height>468</height>
+    <width>800</width>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
-  <widget class="QWidget" name="centralWidget">
-   <widget class="QTableWidget" name="tableWidget">
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QTableWidget" name="processTable">
     <property name="geometry">
      <rect>
-      <x>0</x>
-      <y>10</y>
-      <width>741</width>
-      <height>431</height>
+      <x>140</x>
+      <y>0</y>
+      <width>501</width>
+      <height>551</height>
      </rect>
     </property>
-    <property name="editTriggers">
-     <set>QAbstractItemView::NoEditTriggers</set>
-    </property>
-    <property name="showDropIndicator" stdset="0">
+    <property name="sortingEnabled">
      <bool>false</bool>
     </property>
-    <property name="selectionMode">
-     <enum>QAbstractItemView::SingleSelection</enum>
-    </property>
-    <property name="selectionBehavior">
-     <enum>QAbstractItemView::SelectRows</enum>
-    </property>
-    <property name="sortingEnabled">
-     <bool>true</bool>
-    </property>
-    <property name="columnCount">
-     <number>4</number>
-    </property>
-    <attribute name="horizontalHeaderCascadingSectionResizes">
-     <bool>true</bool>
-    </attribute>
     <column>
      <property name="text">
-      <string notr="true" comment="Имя запущенного процесса">NAME</string>
+      <string>Process Name</string>
      </property>
     </column>
     <column>
      <property name="text">
-      <string notr="true" comment="Идентификатор процесса">PID</string>
+      <string>PID</string>
      </property>
     </column>
     <column>
      <property name="text">
-      <string notr="true">RAM</string>
+      <string>Memory</string>
      </property>
     </column>
     <column>
      <property name="text">
-      <string>PRIORITY</string>
+      <string>Priority</string>
      </property>
     </column>
    </widget>
+   <widget class="QPushButton" name="killButton">
+    <property name="geometry">
+     <rect>
+      <x>680</x>
+      <y>270</y>
+      <width>93</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>kill</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="killString">
+    <property name="geometry">
+     <rect>
+      <x>670</x>
+      <y>230</y>
+      <width>113</width>
+      <height>22</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>26</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
  </widget>
- <layoutdefault spacing="6" margin="11"/>
  <resources/>
  <connections/>
 </ui>
